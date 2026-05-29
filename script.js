@@ -140,7 +140,10 @@ async function sendMessage() {
 
   try {
     // Send message to backend
-    const response = await fetch(getChatbotEndpoint(), {
+    const endpoint = getChatbotEndpoint();
+    console.log('Sending to endpoint:', endpoint);
+    
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -148,16 +151,43 @@ async function sendMessage() {
       body: JSON.stringify({ message: message })
     });
 
-    const data = await response.json();
+    console.log('Response status:', response.status);
+    
+    // Check if response is valid
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('HTTP Error:', response.status, errorText);
+      addMessage(`Server error (${response.status}). Please try again.`, 'system');
+      chatbotSend.disabled = false;
+      chatbotInput.focus();
+      return;
+    }
 
-    if (data.success) {
+    // Parse response
+    let data;
+    try {
+      data = await response.json();
+      console.log('Response data:', data);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError);
+      addMessage('Failed to parse server response. Please try again.', 'system');
+      chatbotSend.disabled = false;
+      chatbotInput.focus();
+      return;
+    }
+
+    if (data.success && data.message) {
       addMessage(data.message, 'ai');
+    } else if (data.error) {
+      console.error('API Error:', data.error);
+      addMessage(`Error: ${data.error}`, 'system');
     } else {
-      addMessage('Sorry, I encountered an error. Please try again.', 'system');
+      console.error('Unexpected response:', data);
+      addMessage('Unexpected response from server. Please try again.', 'system');
     }
   } catch (error) {
-    console.error('Error:', error);
-    addMessage('Network error. Please check your connection and try again.', 'system');
+    console.error('Fetch Error:', error);
+    addMessage(`Connection error: ${error.message}. Please check your internet connection.`, 'system');
   } finally {
     chatbotSend.disabled = false;
     chatbotInput.focus();
