@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+</IfModule>
+
+# Allow all HTTP methods for PHP files
+<Files *.php>
+    <IfModule mod_rewrite.c>
+        RewriteEngine On
+    </IfModule>
+</Files>

@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /backend/
+</IfModule>
+
+<IfModule mod_php.c>
+    php_flag display_errors off
+</IfModule>
+
+# Allow POST requests
+<IfModule mod_env.c>
+    SetEnv HTTP_METHOD POST
+</IfModule>
