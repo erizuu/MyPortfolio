@@ -41,25 +41,29 @@ if (contactForm) {
     try {
       const response = await fetch(contactForm.action, {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
 
-      const result = await response.json();
-
-      formMessage.classList.remove('error', 'success');
-
-      if (result.success) {
+      // Formspree returns 200 on success
+      if (response.ok) {
+        formMessage.classList.remove('error');
         formMessage.classList.add('success');
-        formMessage.textContent = result.message;
+        formMessage.textContent = 'Your message has been sent successfully! I\'ll get back to you soon.';
         contactForm.reset();
       } else {
+        formMessage.classList.remove('success');
         formMessage.classList.add('error');
-        formMessage.textContent = result.message;
+        formMessage.textContent = 'Failed to send message. Please try again.';
       }
+      
     } catch (error) {
       formMessage.classList.remove('success');
       formMessage.classList.add('error');
       formMessage.textContent = 'Network error. Please try again later.';
+      console.error('Form error:', error);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Send Message';
