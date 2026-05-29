@@ -89,3 +89,92 @@ cards.forEach(card => {
   card.classList.add('hidden');
   observer.observe(card);
 });
+
+// AI Chatbot functionality
+const chatbotToggle = document.getElementById('chatbotToggle');
+const chatbotContainer = document.getElementById('chatbotContainer');
+const chatbotClose = document.getElementById('chatbotClose');
+const chatbotInput = document.getElementById('chatbotInput');
+const chatbotSend = document.getElementById('chatbotSend');
+const chatbotMessages = document.getElementById('chatbotMessages');
+
+// Get the correct API endpoint based on current page
+function getChatbotEndpoint() {
+  const currentPath = window.location.pathname;
+  if (currentPath.includes('/Sections/')) {
+    return '../backend/chatbot.php';
+  }
+  return './backend/chatbot.php';
+}
+
+// Toggle chatbot visibility
+chatbotToggle.addEventListener('click', () => {
+  chatbotContainer.classList.toggle('active');
+  if (chatbotContainer.classList.contains('active')) {
+    chatbotInput.focus();
+  }
+});
+
+// Close chatbot
+chatbotClose.addEventListener('click', () => {
+  chatbotContainer.classList.remove('active');
+});
+
+// Send message
+chatbotSend.addEventListener('click', sendMessage);
+chatbotInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+
+async function sendMessage() {
+  const message = chatbotInput.value.trim();
+  
+  if (!message) return;
+
+  // Add user message to chat
+  addMessage(message, 'user');
+  chatbotInput.value = '';
+  chatbotSend.disabled = true;
+
+  try {
+    // Send message to backend
+    const response = await fetch(getChatbotEndpoint(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: message })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      addMessage(data.message, 'ai');
+    } else {
+      addMessage('Sorry, I encountered an error. Please try again.', 'system');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    addMessage('Network error. Please check your connection and try again.', 'system');
+  } finally {
+    chatbotSend.disabled = false;
+    chatbotInput.focus();
+  }
+}
+
+function addMessage(text, sender) {
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('chatbot-message', sender);
+  
+  const contentDiv = document.createElement('div');
+  contentDiv.classList.add('chatbot-message-content');
+  contentDiv.textContent = text;
+  
+  messageDiv.appendChild(contentDiv);
+  chatbotMessages.appendChild(messageDiv);
+  
+  // Scroll to bottom
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+}
